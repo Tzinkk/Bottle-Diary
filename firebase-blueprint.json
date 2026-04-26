@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "Bottle": {
+      "title": "Wine Bottle",
+      "description": "Details about a specific bottle of wine in the collection.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the wine."
+        },
+        "winery": {
+          "type": "string",
+          "description": "The producer of the wine."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of wine (e.g., Red, White, Rosé).",
+          "enum": ["Red", "White", "Rosé", "Sparkling", "Dessert", "Fortified"]
+        },
+        "vintage": {
+          "type": "integer",
+          "description": "The year the wine was produced."
+        },
+        "region": {
+          "type": "string",
+          "description": "The geographic region where the grapes were grown."
+        },
+        "country": {
+          "type": "string",
+          "description": "The country of origin."
+        },
+        "rating": {
+          "type": "number",
+          "description": "User rating from 1 to 5."
+        },
+        "tastingNotes": {
+          "type": "string",
+          "description": "Personal notes on flavor and aroma."
+        },
+        "price": {
+          "type": "number",
+          "description": "The purchase price of the bottle."
+        },
+        "purchaseDate": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the bottle was acquired."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user who owns this bottle."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp."
+        }
+      },
+      "required": ["name", "winery", "userId", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "bottles": {
+      "schema": "Bottle",
+      "description": "Main collection for wine bottles."
+    }
+  }
+}
