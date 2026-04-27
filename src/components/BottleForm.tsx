@@ -92,7 +92,7 @@ export default function BottleForm({ bottle, onClose, onSave }: BottleFormProps)
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -105,15 +105,14 @@ export default function BottleForm({ bottle, onClose, onSave }: BottleFormProps)
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-2xl bg-[#FDFBF7] border border-[#EBE3D5] rounded-xl shadow-2xl overflow-hidden"
+        className="relative w-full max-w-2xl bg-[#FDFBF7] border border-[#EBE3D5] sm:rounded-xl shadow-2xl h-full sm:h-auto overflow-hidden flex flex-col"
         id="bottle-form-container"
       >
-        <div className="flex items-center justify-between p-6 border-b border-[#EBE3D5]">
+        <div className="flex items-center justify-between p-6 border-b border-[#EBE3D5] bg-white sticky top-0 z-10">
           <div>
-            <h2 className="text-2xl font-serif font-bold text-[#2F2A26] tracking-tight">
-              {bottle ? 'Edit Bottle' : 'New Collection Entry'}
+            <h2 className="text-xl font-serif font-bold text-[#2F2A26] tracking-tight">
+              {bottle ? 'Edit Bottle' : 'New Bottle'}
             </h2>
-            <p className="text-[#7D7468] text-sm font-light mt-1">Fill in the details for your refined cellar.</p>
           </div>
           <button
             onClick={onClose}
@@ -123,7 +122,7 @@ export default function BottleForm({ bottle, onClose, onSave }: BottleFormProps)
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 max-h-[75vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             <div className="md:col-span-2">

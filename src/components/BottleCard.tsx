@@ -41,6 +41,7 @@ const BottleCard: React.FC<BottleCardProps> = ({ bottle, onEdit, onDelete }) => 
           <img 
             src={bottle.imageUrl} 
             alt={bottle.name} 
+            loading="lazy"
             className="w-full h-full object-contain mix-blend-multiply py-2 group-hover:scale-105 transition-transform duration-500" 
           />
         </div>
@@ -79,41 +80,58 @@ const BottleCard: React.FC<BottleCardProps> = ({ bottle, onEdit, onDelete }) => 
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-6 pt-4 border-t border-[#F4EFE6]">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 mb-6 pt-4 border-t border-[#F4EFE6]">
           <div className="flex items-center gap-2 text-sm text-[#5C554D]">
-            <Calendar className="w-4 h-4 text-[#D4CDBC]" />
+            <Calendar className="w-4 h-4 text-[#D4CDBC] shrink-0" />
             <span className="font-light">{bottle.vintage || 'NV'}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-[#5C554D]">
-            <MapPin className="w-4 h-4 text-[#D4CDBC]" />
+            <MapPin className="w-4 h-4 text-[#D4CDBC] shrink-0" />
             <span className="truncate font-light">{bottle.region || 'Unknown Region'}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-[#5C554D] col-span-2">
+          <div className="flex items-center gap-2 text-sm text-[#5C554D]">
+            <Wine className="w-4 h-4 text-[#D4CDBC] shrink-0" />
+            <span className="truncate font-light">{bottle.country || 'Unknown Country'}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-[#5C554D]">
             <Grape className="w-4 h-4 text-[#D4CDBC] shrink-0" />
             <span className="truncate font-light">{bottle.grapes || 'Unknown Grapes'}</span>
           </div>
-          {bottle.rating && (
-            <div className="flex items-center gap-1">
-              {[...Array(5)].map((_, i) => (
+          
+          <div className="flex items-center gap-1 col-span-1">
+            {bottle.rating ? (
+              [...Array(5)].map((_, i) => (
                 <Star
                   key={i}
                   className={`w-3.5 h-3.5 ${i < bottle.rating! ? 'text-[#D4CDBC] fill-[#D4CDBC]' : 'text-[#F4EFE6]'}`}
                 />
-              ))}
-            </div>
-          )}
+              ))
+            ) : (
+                <span className="text-xs text-[#A79F93] font-light italic">No rating</span>
+            )}
+          </div>
+
           {bottle.price && (
-            <div className="text-sm font-medium text-[#2F2A26]">
+            <div className="text-sm font-medium text-[#2F2A26] text-right">
               ฿{bottle.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           )}
         </div>
 
         {bottle.tastingNotes && (
-          <div className="relative mt-2">
+          <div className="mb-4 relative">
             <div className="absolute -left-3 top-0 bottom-0 w-0.5 bg-[#EBE3D5] rounded-full" />
-            <p className="text-sm text-[#7D7468] italic line-clamp-3 font-serif tracking-wide leading-relaxed">
+            <p className="text-sm text-[#7D7468] italic line-clamp-2 font-serif tracking-wide leading-relaxed">
               "{bottle.tastingNotes}"
+            </p>
+          </div>
+        )}
+
+        {bottle.note && (
+          <div className="p-3 bg-[#F4EFE6]/50 rounded-lg border border-[#EBE3D5]/50">
+            <p className="text-[11px] uppercase tracking-wider font-bold text-[#A79F93] mb-1">Cellar Note</p>
+            <p className="text-xs text-[#5C554D] leading-relaxed line-clamp-2">
+              {bottle.note}
             </p>
           </div>
         )}

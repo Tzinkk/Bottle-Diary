@@ -116,6 +116,19 @@ export default function BottleList() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+      {/* Mobile Floating Action Button */}
+      <div className="fixed bottom-6 right-6 z-50 sm:hidden">
+        <button
+          onClick={() => {
+            setEditingBottle(null);
+            setShowForm(true);
+          }}
+          className="w-14 h-14 bg-[#8B2635] text-white rounded-full flex items-center justify-center shadow-2xl shadow-[#8B2635]/40 border border-[#7A212E] active:scale-95 transition-all"
+        >
+          <Plus className="w-6 h-6" />
+        </button>
+      </div>
+
       {/* Search and Filters */}
       <div className="mb-10 flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
         <div className="relative w-full md:w-96">
@@ -150,7 +163,6 @@ export default function BottleList() {
               <option>Sato</option>
               <option>Sake</option>
             </select>
-            {/* Custom dropdown arrow to match theme */}
             <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#7D7468]">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
@@ -161,11 +173,11 @@ export default function BottleList() {
               setEditingBottle(null);
               setShowForm(true);
             }}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-[#8B2635] border border-[#7A212E] text-white rounded-lg hover:bg-[#6A1C27] transition-all active:scale-95 font-medium ml-auto shadow-sm"
+            className="hidden sm:flex items-center justify-center gap-2 px-6 py-3 bg-[#8B2635] border border-[#7A212E] text-white rounded-lg hover:bg-[#6A1C27] transition-all active:scale-95 font-medium ml-auto shadow-sm"
             id="add-bottle-button"
           >
             <Plus className="w-5 h-5" />
-            <span className="hidden sm:inline">Add Bottle</span>
+            <span>Add Bottle</span>
           </button>
         </div>
       </div>
