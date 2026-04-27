@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bottle, WineType } from '../types';
 import { X, Save, Star, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ref, uploadBytesResumable, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../lib/firebase';
 
 interface BottleFormProps {
