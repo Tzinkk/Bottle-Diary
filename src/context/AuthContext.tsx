@@ -21,6 +21,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!currentUser) {
         try {
           setError(null);
+          // Add a small delay to prevent rapid-fire anonymous sign-ins
+          await new Promise(resolve => setTimeout(resolve, 500));
           await signInAnonymously(auth);
         } catch (err: any) {
           console.error("Anonymous sign-in failed:", err);
@@ -33,7 +35,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     });
-    return unsubscribe;
+
+    // Safety timeout: if loading takes more than 5 seconds, force it to false
+    // and set a timeout error if we still don't have a user.
+    const timeout = setTimeout(() => {
+      setLoading(prev => {
+        if (prev && !user) {
+          console.warn("Auth loading timed out after 5s");
+          setError(new Error("Cellar connection is taking longer than expected. Please check your signal."));
+        }
+        return false;
+      });
+    }, 5000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const logout = async () => {

@@ -13,8 +13,8 @@ import Header from './components/Header';
 import BottleList from './components/BottleList';
 import Pairings from './components/Pairings';
 import { Wine } from 'lucide-react';
-import { motion } from 'motion/react';
-import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect } from 'react';
 
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
@@ -22,13 +22,23 @@ function AppContent() {
   const { user, loading, error } = useAuth();
   const [activeTab, setActiveTab] = useState<'cellar' | 'pairings'>('cellar');
 
+  const [showRetry, setShowRetry] = useState(false);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (loading) {
+      timer = setTimeout(() => setShowRetry(true), 6000);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
+
   if (loading || (!user && !error)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FDFBF7]">
+      <div className="min-h-screen flex items-center justify-center bg-[#FDFBF7] px-4">
         <motion.div
            initial={{ opacity: 0 }}
            animate={{ opacity: 1 }}
-           className="flex flex-col items-center gap-6"
+           className="flex flex-col items-center gap-6 w-full max-w-sm"
         >
           <div className="relative">
             <Wine className="w-16 h-16 text-[#8B2635]/20" />
@@ -40,7 +50,7 @@ function AppContent() {
                <div className="w-20 h-20 border-t-2 border-b-2 border-[#8B2635] rounded-full opacity-20" />
             </motion.div>
           </div>
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-2 text-center">
             <p className="text-[#8B2635] font-serif italic text-lg animate-pulse">Entering the Cellar...</p>
             <div className="h-0.5 w-32 bg-[#EBE3D5] rounded-full overflow-hidden">
               <motion.div
@@ -49,6 +59,25 @@ function AppContent() {
                 className="h-full w-16 bg-[#8B2635]"
               />
             </div>
+            
+            <AnimatePresence>
+              {showRetry && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 space-y-4"
+                >
+                  <p className="text-xs text-[#7D7468] font-light">Taking longer than usual?</p>
+                  <button 
+                    onClick={() => window.location.reload()}
+                    className="flex items-center gap-2 px-4 py-2 text-[#8B2635] border border-[#8B2635]/20 rounded-full text-sm hover:bg-[#8B2635]/5 transition-colors"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Refresh Page
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
       </div>

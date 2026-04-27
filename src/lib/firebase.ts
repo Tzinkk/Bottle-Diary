@@ -9,18 +9,18 @@ export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 
-// Enable offline persistence
+// Persistence disabled to improve reliability in preview environment
+/*
 if (typeof window !== 'undefined') {
   enableMultiTabIndexedDbPersistence(db).catch((err) => {
     if (err.code === 'failed-precondition') {
-      // Multiple tabs open, persistence can only be enabled in one tab at a time.
-      console.warn('Firestore persistence failed to enable (failed-precondition)');
+      console.warn('Firestore persistence failed (failed-precondition)');
     } else if (err.code === 'unimplemented') {
-      // The current browser doesn't support all of the features required to enable persistence
-      console.warn('Firestore persistence is not supported by this browser (unimplemented)');
+      console.warn('Firestore persistence unsupported');
     }
   });
 }
+*/
 
 export { signInAnonymously };
 export const logout = () => signOut(auth);

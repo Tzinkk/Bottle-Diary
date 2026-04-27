@@ -64,26 +64,47 @@ export default function BottleForm({ bottle, onClose, onSave }: BottleFormProps)
     setIsUploading(true);
     setUploadProgress(0);
 
-    const storageRef = ref(storage, `bottles/${Date.now()}_${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
+    try {
+      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const storageRef = ref(storage, `bottles/${fileName}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
 
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setUploadProgress(progress);
-      },
-      (error) => {
-        console.error('Upload failed:', error);
-        alert('Image upload failed. Please try again.');
-        setIsUploading(false);
-      },
-      async () => {
-        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        setFormData((prev) => ({ ...prev, imageUrl: downloadURL }));
-        setIsUploading(false);
-      }
-    );
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log(`Upload progress: ${progress}%`);
+          setUploadProgress(isNaN(progress) ? 0 : progress);
+        },
+        (error) => {
+          console.error('Upload failed detail:', error);
+          let message = 'Image upload failed. ';
+          if (error.code === 'storage/unauthorized') message += 'Permission denied. Please check your connection.';
+          else if (error.code === 'storage/canceled') message += 'Upload canceled.';
+          else message += 'Please try again or use a different image.';
+          
+          alert(message);
+          setIsUploading(false);
+          setUploadProgress(0);
+        },
+        async () => {
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            setFormData((prev) => ({ ...prev, imageUrl: downloadURL }));
+            setIsUploading(false);
+            setUploadProgress(100);
+          } catch (err) {
+            console.error('Error getting download URL:', err);
+            alert('Failed to get image link after upload.');
+            setIsUploading(false);
+          }
+        }
+      );
+    } catch (err) {
+      console.error('Error starting upload:', err);
+      alert('Could not start upload. Please try again.');
+      setIsUploading(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
