@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bottle, WineType } from '../types';
 import { X, Save, Star, Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytesResumable, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../lib/firebase';
 
 interface BottleFormProps {
@@ -52,7 +52,7 @@ export default function BottleForm({ bottle, onClose, onSave }: BottleFormProps)
     }
   }, [bottle]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -61,50 +61,82 @@ export default function BottleForm({ bottle, onClose, onSave }: BottleFormProps)
       return;
     }
 
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be under 5MB');
+      return;
+    }
+
     setIsUploading(true);
-    setUploadProgress(0);
+    setUploadProgress(10);
 
     try {
-      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-      const storageRef = ref(storage, `bottles/${fileName}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      // Compress image before upload if it's large
+      const compressedFile = await compressImage(file);
+      
+      setUploadProgress(30);
 
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log(`Upload progress: ${progress}%`);
-          setUploadProgress(isNaN(progress) ? 0 : progress);
-        },
-        (error) => {
-          console.error('Upload failed detail:', error);
-          let message = 'Image upload failed. ';
-          if (error.code === 'storage/unauthorized') message += 'Permission denied. Please check your connection.';
-          else if (error.code === 'storage/canceled') message += 'Upload canceled.';
-          else message += 'Please try again or use a different image.';
-          
-          alert(message);
-          setIsUploading(false);
-          setUploadProgress(0);
-        },
-        async () => {
-          try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            setFormData((prev) => ({ ...prev, imageUrl: downloadURL }));
-            setIsUploading(false);
-            setUploadProgress(100);
-          } catch (err) {
-            console.error('Error getting download URL:', err);
-            alert('Failed to get image link after upload.');
-            setIsUploading(false);
-          }
-        }
-      );
-    } catch (err) {
-      console.error('Error starting upload:', err);
-      alert('Could not start upload. Please try again.');
+      const storageRef = ref(storage, `bottles/${Date.now()}_${file.name}`);
+      
+      // Use uploadBytes instead of uploadBytesResumable to avoid CORS progress event issues
+      setUploadProgress(50);
+      const snapshot = await uploadBytes(storageRef, compressedFile);
+      setUploadProgress(90);
+      
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      setFormData((prev) => ({ ...prev, imageUrl: downloadURL }));
+      setUploadProgress(100);
+    } catch (error) {
+      console.error('Upload failed:', error);
+      alert('Image upload failed. Please check your connection and try again.');
+    } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
+  };
+
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const MAX_WIDTH = 1200;
+      const MAX_SIZE = 1 * 1024 * 1024; // 1MB target
+
+      // If already small enough, skip compression
+      if (file.size <= MAX_SIZE) {
+        resolve(file);
+        return;
+      }
+
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const canvas = document.createElement('canvas');
+        let { width, height } = img;
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+            } else {
+              resolve(file);
+            }
+          },
+          'image/jpeg',
+          0.85
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(file);
+      };
+      img.src = url;
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -113,7 +145,7 @@ export default function BottleForm({ bottle, onClose, onSave }: BottleFormProps)
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -126,14 +158,15 @@ export default function BottleForm({ bottle, onClose, onSave }: BottleFormProps)
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className="relative w-full max-w-2xl bg-[#FDFBF7] border border-[#EBE3D5] sm:rounded-xl shadow-2xl h-full sm:h-auto overflow-hidden flex flex-col"
+        className="relative w-full max-w-2xl bg-[#FDFBF7] border border-[#EBE3D5] rounded-xl shadow-2xl overflow-hidden"
         id="bottle-form-container"
       >
-        <div className="flex items-center justify-between p-6 border-b border-[#EBE3D5] bg-white sticky top-0 z-10">
+        <div className="flex items-center justify-between p-6 border-b border-[#EBE3D5]">
           <div>
-            <h2 className="text-xl font-serif font-bold text-[#2F2A26] tracking-tight">
-              {bottle ? 'Edit Bottle' : 'New Bottle'}
+            <h2 className="text-2xl font-serif font-bold text-[#2F2A26] tracking-tight">
+              {bottle ? 'Edit Bottle' : 'New Collection Entry'}
             </h2>
+            <p className="text-[#7D7468] text-sm font-light mt-1">Fill in the details for your refined cellar.</p>
           </div>
           <button
             onClick={onClose}
@@ -143,7 +176,7 @@ export default function BottleForm({ bottle, onClose, onSave }: BottleFormProps)
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit} className="p-8 max-h-[75vh] overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
             <div className="md:col-span-2">
